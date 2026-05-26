@@ -12,7 +12,7 @@
   </style>
 </head>
 <body>
-  <h2>Inserir B101 → B108</h2>
+  <h2>Inserir H01→H10 e H101→H110</h2>
   <p>Clique para criar os apartamentos seguindo o mesmo padrão do A01.</p>
   <button onclick="seed()">Executar</button>
   <div id="log"></div>
@@ -49,7 +49,8 @@
     const area = modelo.area || 0;
     const tipo = modelo.tipo || "Apartamento";
 
-    const novos = ["B101","B102","B103","B104","B105","B106","B107","B108"];
+    const novos = ["H01","H02","H03","H04","H05","H06","H07","H08","H09","H10",
+                   "H101","H102","H103","H104","H105","H106","H107","H108","H109","H110"];
 
     for (const id of novos) {
       // Verifica se já existe
