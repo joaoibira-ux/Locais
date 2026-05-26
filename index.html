@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Locais" />
+  <title>Locais</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="stylesheet" href="./style.css?v=1" />
+</head>
+<body>
+
+<header>
+  <span></span>
+  <span>Locais</span>
+  <span id="versao-app" class="header-versao"></span>
+</header>
+
+<div id="lista" class="lista"></div>
+
+<button class="fab" id="fab" onclick="toggleForm()">+</button>
+
+<form class="form-card" id="form" novalidate style="display:none">
+  <h3 id="form-titulo">Novo Local</h3>
+  <div class="form-grid">
+
+    <div class="col2">
+      <div>
+        <label for="f-tipo">Tipo</label>
+        <select id="f-tipo">
+          <option value="Apartamento">Apartamento</option>
+          <option value="Hall">Hall</option>
+          <option value="Escadas">Escadas</option>
+          <option value="Garagem">Garagem</option>
+          <option value="Área Comum">Área Comum</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+      <div>
+        <label for="f-id">Identificação</label>
+        <input type="text" id="f-id" placeholder="Ex: A01" />
+      </div>
+    </div>
+
+    <div>
+      <label for="f-area">Área (m²)</label>
+      <input type="decimal" inputmode="decimal" id="f-area" placeholder="0,00" />
+    </div>
+
+    <div>
+      <label>Serviços a executar</label>
+      <div id="servicos-check" class="servicos-check">
+        <p class="check-vazio">Carregando serviços...</p>
+      </div>
+    </div>
+
+    <button type="submit" class="btn-add" id="btn-submit">+ Cadastrar</button>
+  </div>
+</form>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="./app.js?v=1"></script>
+</body>
+</html>
