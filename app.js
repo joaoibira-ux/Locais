@@ -7,13 +7,14 @@ const firebaseConfig = {
   appId: "1:472820177992:web:2e1b98c9f6ac3a823d0c7d"
 };
 
-const VERSAO = "1.8";
+const VERSAO = "1.9";
 document.getElementById("versao-app").textContent = "v" + VERSAO;
 
 firebase.initializeApp(firebaseConfig);
 const db       = firebase.firestore();
 const colLocal = db.collection("locais");
 const colServ  = db.collection("servicos");
+const colFunc  = db.collection("funcionarios");
 
 function escHtml(s) {
   return String(s || "")
@@ -30,23 +31,22 @@ function parseDecimal(s) {
   return isNaN(v) ? 0 : v;
 }
 
-// ─── Serviços disponíveis (carregados do Firestore) ───────────────────────────
-let servicosDisponiveis = [];
-
+// ─── Ordenação de serviços ────────────────────────────────────────────────────
 function ordemServico(nome) {
   const n = (nome || "").toLowerCase();
-  if (n.includes("tratamento"))              return 0;
-  if (n.includes("pasta"))                   return 1;
-  if (n.includes("emassamento") || n.includes("massa")) return 2;
-  if (n.includes("textura"))                 return 3;
+  if (n.includes("tratamento"))                          return 0;
+  if (n.includes("pasta"))                               return 1;
+  if (n.includes("emassamento") || n.includes("massa"))  return 2;
+  if (n.includes("textura"))                             return 3;
   return 99;
 }
 
 function sortServicos(docs) {
-  return [...docs].sort((a, b) =>
-    ordemServico(a.nome) - ordemServico(b.nome)
-  );
+  return [...docs].sort((a, b) => ordemServico(a.nome) - ordemServico(b.nome));
 }
+
+// ─── Serviços disponíveis ─────────────────────────────────────────────────────
+let servicosDisponiveis = [];
 
 colServ.onSnapshot(snap => {
   const raw = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -70,8 +70,55 @@ function renderCheckboxes(selecionados) {
   }).join("");
 }
 
+// ─── Funcionários ─────────────────────────────────────────────────────────────
+let funcionariosCache = [];
+
+colFunc.orderBy("nome", "asc").onSnapshot(snap => {
+  funcionariosCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+});
+
+// ─── Modal de seleção de funcionário ─────────────────────────────────────────
+let modalLocalId   = null;
+let modalServicoId = null;
+
+function abrirModalFuncionarios(localId, servicoId) {
+  modalLocalId   = localId;
+  modalServicoId = servicoId;
+
+  const lista = document.getElementById("modal-lista-func");
+  if (funcionariosCache.length === 0) {
+    lista.innerHTML = '<p class="check-vazio">Nenhum funcionário cadastrado.</p>';
+  } else {
+    lista.innerHTML = funcionariosCache.map(f => `
+      <button class="func-item" onclick="confirmarExecucao('${f.id}','${escHtml(f.nome)}')">
+        <span class="func-nome">${escHtml(f.nome)}</span>
+        <span class="func-cargo">${escHtml(f.cargo)}</span>
+      </button>`).join("");
+  }
+
+  document.getElementById("modal-func").style.display = "flex";
+}
+
+function confirmarExecucao(funcId, funcNome) {
+  const l = locaisCache[modalLocalId];
+  if (!l) { fecharModal(); return; }
+  const servicos = (l.servicos || []).map(s =>
+    s.id === modalServicoId
+      ? { id: s.id, nome: s.nome, status: "concluido", executor: { id: funcId, nome: funcNome } }
+      : s
+  );
+  colLocal.doc(modalLocalId).update({ servicos });
+  fecharModal();
+}
+
+function fecharModal() {
+  document.getElementById("modal-func").style.display = "none";
+  modalLocalId   = null;
+  modalServicoId = null;
+}
+
 // ─── Locais ───────────────────────────────────────────────────────────────────
-let locaisCache = {};
+let locaisCache      = {};
 let editandoId       = null;
 let editandoServicos = [];
 
@@ -87,8 +134,8 @@ function render(docs) {
   lista.innerHTML = docs.map(doc => {
     const l = doc.data();
     locaisCache[doc.id] = l;
-    const servs = [...(l.servicos || [])].sort((a, b) => ordemServico(a.nome) - ordemServico(b.nome));
-    const total     = servs.length;
+    const servs      = [...(l.servicos || [])].sort((a, b) => ordemServico(a.nome) - ordemServico(b.nome));
+    const total      = servs.length;
     const concluidos = servs.filter(s => s.status === "concluido").length;
     const progresso  = total > 0
       ? `<div class="prog-bar"><div class="prog-fill" style="width:${Math.round(concluidos/total*100)}%"></div></div>`
@@ -96,12 +143,20 @@ function render(docs) {
 
     const listaServs = servs.length === 0
       ? '<p class="check-vazio">Sem serviços atribuídos.</p>'
-      : servs.map(s => `
-          <button class="serv-item ${s.status}" onclick="toggleServico('${doc.id}','${s.id}')">
-            <span class="serv-icone">${s.status === "concluido" ? "✓" : "○"}</span>
-            <span class="serv-nome">${escHtml(s.nome)}</span>
-            <span class="serv-badge ${s.status}">${s.status === "concluido" ? "concluído" : "pendente"}</span>
-          </button>`).join("");
+      : servs.map(s => {
+          const executor = s.executor
+            ? `<span class="serv-executor">${escHtml(s.executor.nome)}</span>`
+            : "";
+          return `
+            <button class="serv-item ${s.status}" onclick="toggleServico('${doc.id}','${s.id}')">
+              <span class="serv-icone">${s.status === "concluido" ? "✓" : "○"}</span>
+              <div class="serv-info">
+                <span class="serv-nome">${escHtml(s.nome)}</span>
+                ${executor}
+              </div>
+              <span class="serv-badge ${s.status}">${s.status === "concluido" ? "concluído" : "pendente"}</span>
+            </button>`;
+        }).join("");
 
     return `
       <div class="card">
@@ -128,16 +183,25 @@ colLocal.orderBy("identificacao", "asc").onSnapshot(snap => {
     '<p class="empty">Erro ao conectar. Verifique sua internet.</p>';
 });
 
-// ─── Toggle status de serviço ─────────────────────────────────────────────────
+// ─── Toggle serviço ───────────────────────────────────────────────────────────
 function toggleServico(localId, servicoId) {
   const l = locaisCache[localId];
   if (!l) return;
-  const servicos = (l.servicos || []).map(s =>
-    s.id === servicoId
-      ? { ...s, status: s.status === "concluido" ? "pendente" : "concluido" }
-      : s
-  );
-  colLocal.doc(localId).update({ servicos });
+  const serv = (l.servicos || []).find(s => s.id === servicoId);
+  if (!serv) return;
+
+  if (serv.status === "concluido") {
+    const info = serv.executor ? `Executor: ${serv.executor.nome}` : "";
+    const senha = prompt(`DESMARCAR EXECUÇÃO?\n\n${serv.nome}\n${info}\n\nDigite a senha:`);
+    if (senha === null) return;
+    if (senha !== "4512") { alert("Senha incorreta."); return; }
+    const servicos = (l.servicos || []).map(s =>
+      s.id === servicoId ? { id: s.id, nome: s.nome, status: "pendente" } : s
+    );
+    colLocal.doc(localId).update({ servicos });
+  } else {
+    abrirModalFuncionarios(localId, servicoId);
+  }
 }
 
 // ─── Formulário ───────────────────────────────────────────────────────────────
@@ -152,20 +216,15 @@ document.getElementById("form").addEventListener("submit", function(e) {
     return;
   }
 
-  // Serviços selecionados nos checkboxes
   const checks  = document.querySelectorAll("#servicos-check input[type=checkbox]:checked");
   const novoIds = Array.from(checks).map(c => c.value);
-
-  // Preserva status de serviços já existentes; novos ficam "pendente"
   const servicosAntigos = editandoId ? (locaisCache[editandoId]?.servicos || []) : [];
   const servicos = novoIds.map(id => {
     const disp    = servicosDisponiveis.find(s => s.id === id);
     const existia = servicosAntigos.find(s => s.id === id);
-    return {
-      id,
-      nome:   disp ? disp.nome : id,
-      status: existia ? existia.status : "pendente"
-    };
+    return existia
+      ? { id, nome: disp ? disp.nome : id, status: existia.status, ...(existia.executor ? { executor: existia.executor } : {}) }
+      : { id, nome: disp ? disp.nome : id, status: "pendente" };
   });
 
   if (editandoId) {
@@ -200,13 +259,12 @@ function editarLocal(id) {
     ? l.area.toFixed(2).replace(".", ",") : "";
   renderCheckboxes(editandoServicos);
 
-  const form = document.getElementById("form");
-  form.style.display = "block";
+  document.getElementById("form").style.display = "block";
   document.getElementById("fab").classList.add("open");
   document.getElementById("f-id").focus();
 }
 
-// ─── Excluir ─────────────────────────────────────────────────────────────────
+// ─── Excluir ──────────────────────────────────────────────────────────────────
 function excluir(id) {
   const l = locaisCache[id];
   if (!l) return;

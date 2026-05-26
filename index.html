@@ -9,7 +9,7 @@
   <title>Locais</title>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <link rel="manifest" href="./manifest.json" />
-  <link rel="stylesheet" href="./style.css?v=9" />
+  <link rel="stylesheet" href="./style.css?v=10" />
 </head>
 <body>
 
@@ -59,8 +59,19 @@
   </div>
 </form>
 
+<!-- Modal de seleção de funcionário -->
+<div id="modal-func" class="modal-overlay" style="display:none" onclick="if(event.target===this)fecharModal()">
+  <div class="modal-sheet">
+    <div class="form-header">
+      <h3>Quem executou?</h3>
+      <button type="button" class="btn-fechar" onclick="fecharModal()">✕</button>
+    </div>
+    <div id="modal-lista-func"></div>
+  </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="./app.js?v=9"></script>
+<script src="./app.js?v=10"></script>
 </body>
 </html>
