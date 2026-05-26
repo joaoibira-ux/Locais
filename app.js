@@ -7,7 +7,7 @@ const firebaseConfig = {
   appId: "1:472820177992:web:2e1b98c9f6ac3a823d0c7d"
 };
 
-const VERSAO = "1.7";
+const VERSAO = "1.8";
 document.getElementById("versao-app").textContent = "v" + VERSAO;
 
 firebase.initializeApp(firebaseConfig);
@@ -96,8 +96,8 @@ function render(docs) {
 
     const listaServs = servs.length === 0
       ? '<p class="check-vazio">Sem serviços atribuídos.</p>'
-      : servs.map((s, i) => `
-          <button class="serv-item ${s.status}" onclick="toggleServico('${doc.id}',${i})">
+      : servs.map(s => `
+          <button class="serv-item ${s.status}" onclick="toggleServico('${doc.id}','${s.id}')">
             <span class="serv-icone">${s.status === "concluido" ? "✓" : "○"}</span>
             <span class="serv-nome">${escHtml(s.nome)}</span>
             <span class="serv-badge ${s.status}">${s.status === "concluido" ? "concluído" : "pendente"}</span>
@@ -129,14 +129,14 @@ colLocal.orderBy("identificacao", "asc").onSnapshot(snap => {
 });
 
 // ─── Toggle status de serviço ─────────────────────────────────────────────────
-function toggleServico(localId, idx) {
+function toggleServico(localId, servicoId) {
   const l = locaisCache[localId];
   if (!l) return;
-  const servicos = [...(l.servicos || [])];
-  servicos[idx] = {
-    ...servicos[idx],
-    status: servicos[idx].status === "concluido" ? "pendente" : "concluido"
-  };
+  const servicos = (l.servicos || []).map(s =>
+    s.id === servicoId
+      ? { ...s, status: s.status === "concluido" ? "pendente" : "concluido" }
+      : s
+  );
   colLocal.doc(localId).update({ servicos });
 }
 
