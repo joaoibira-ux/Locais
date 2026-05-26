@@ -9,7 +9,7 @@
   <title>Locais</title>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <link rel="manifest" href="./manifest.json" />
-  <link rel="stylesheet" href="./style.css?v=10" />
+  <link rel="stylesheet" href="./style.css?v=11" />
 </head>
 <body>
 
@@ -63,15 +63,26 @@
 <div id="modal-func" class="modal-overlay" style="display:none" onclick="if(event.target===this)fecharModal()">
   <div class="modal-sheet">
     <div class="form-header">
-      <h3>Quem executou?</h3>
+      <h3 id="modal-titulo-serv">Quem executou?</h3>
       <button type="button" class="btn-fechar" onclick="fecharModal()">✕</button>
     </div>
+    <div class="modal-pagamento">
+      <div class="modal-campo">
+        <label for="modal-valor">Valor pago (R$)</label>
+        <input type="decimal" inputmode="decimal" id="modal-valor" placeholder="0,00" />
+      </div>
+      <div class="modal-campo">
+        <label for="modal-data">Data do pagamento</label>
+        <input type="text" id="modal-data" placeholder="DD/MM/AAAA" />
+      </div>
+    </div>
+    <p class="modal-label-func">Selecione o executor:</p>
     <div id="modal-lista-func"></div>
   </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="./app.js?v=10"></script>
+<script src="./app.js?v=11"></script>
 </body>
 </html>

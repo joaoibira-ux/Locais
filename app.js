@@ -7,7 +7,7 @@ const firebaseConfig = {
   appId: "1:472820177992:web:2e1b98c9f6ac3a823d0c7d"
 };
 
-const VERSAO = "1.9";
+const VERSAO = "2.0";
 document.getElementById("versao-app").textContent = "v" + VERSAO;
 
 firebase.initializeApp(firebaseConfig);
@@ -81,20 +81,39 @@ colFunc.orderBy("nome", "asc").onSnapshot(snap => {
 let modalLocalId   = null;
 let modalServicoId = null;
 
+function hoje() {
+  const d = new Date();
+  return [String(d.getDate()).padStart(2,"0"), String(d.getMonth()+1).padStart(2,"0"), d.getFullYear()].join("/");
+}
+
+function parseMoeda(s) {
+  const v = parseFloat(String(s).replace(/[^\d,]/g, "").replace(",", "."));
+  return isNaN(v) ? 0 : v;
+}
+
+function fmtMoeda(v) {
+  return "R$ " + (v||0).toFixed(2).replace(".", ",").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
 function abrirModalFuncionarios(localId, servicoId) {
   modalLocalId   = localId;
   modalServicoId = servicoId;
 
+  // Pré-preenche valor com mdo do serviço cadastrado
+  const servDisp = servicosDisponiveis.find(s => s.id === servicoId);
+  const mdoVal   = servDisp && servDisp.mdo > 0 ? servDisp.mdo.toFixed(2).replace(".", ",") : "";
+  document.getElementById("modal-valor").value = mdoVal;
+  document.getElementById("modal-data").value  = hoje();
+  document.getElementById("modal-titulo-serv").textContent = servDisp ? servDisp.nome : "Quem executou?";
+
   const lista = document.getElementById("modal-lista-func");
-  if (funcionariosCache.length === 0) {
-    lista.innerHTML = '<p class="check-vazio">Nenhum funcionário cadastrado.</p>';
-  } else {
-    lista.innerHTML = funcionariosCache.map(f => `
-      <button class="func-item" onclick="confirmarExecucao('${f.id}','${escHtml(f.nome)}')">
-        <span class="func-nome">${escHtml(f.nome)}</span>
-        <span class="func-cargo">${escHtml(f.cargo)}</span>
-      </button>`).join("");
-  }
+  lista.innerHTML = funcionariosCache.length === 0
+    ? '<p class="check-vazio">Nenhum funcionário cadastrado.</p>'
+    : funcionariosCache.map(f => `
+        <button class="func-item" onclick="confirmarExecucao('${f.id}','${escHtml(f.nome)}')">
+          <span class="func-nome">${escHtml(f.nome)}</span>
+          <span class="func-cargo">${escHtml(f.cargo)}</span>
+        </button>`).join("");
 
   document.getElementById("modal-func").style.display = "flex";
 }
@@ -102,9 +121,13 @@ function abrirModalFuncionarios(localId, servicoId) {
 function confirmarExecucao(funcId, funcNome) {
   const l = locaisCache[modalLocalId];
   if (!l) { fecharModal(); return; }
+  const valorPago     = parseMoeda(document.getElementById("modal-valor").value);
+  const dataPagamento = document.getElementById("modal-data").value.trim();
   const servicos = (l.servicos || []).map(s =>
     s.id === modalServicoId
-      ? { id: s.id, nome: s.nome, status: "concluido", executor: { id: funcId, nome: funcNome } }
+      ? { id: s.id, nome: s.nome, status: "concluido",
+          executor: { id: funcId, nome: funcNome },
+          valorPago, dataPagamento }
       : s
   );
   colLocal.doc(modalLocalId).update({ servicos });
@@ -145,7 +168,7 @@ function render(docs) {
       ? '<p class="check-vazio">Sem serviços atribuídos.</p>'
       : servs.map(s => {
           const executor = s.executor
-            ? `<span class="serv-executor">${escHtml(s.executor.nome)}</span>`
+            ? `<span class="serv-executor">${escHtml(s.executor.nome)}${s.dataPagamento ? ` · ${escHtml(s.dataPagamento)}` : ""}${s.valorPago > 0 ? ` · ${fmtMoeda(s.valorPago)}` : ""}</span>`
             : "";
           return `
             <button class="serv-item ${s.status}" onclick="toggleServico('${doc.id}','${s.id}')">
