@@ -7,7 +7,7 @@ const firebaseConfig = {
   appId: "1:472820177992:web:2e1b98c9f6ac3a823d0c7d"
 };
 
-const VERSAO = "1.6";
+const VERSAO = "1.7";
 document.getElementById("versao-app").textContent = "v" + VERSAO;
 
 firebase.initializeApp(firebaseConfig);
@@ -87,7 +87,7 @@ function render(docs) {
   lista.innerHTML = docs.map(doc => {
     const l = doc.data();
     locaisCache[doc.id] = l;
-    const servs = l.servicos || [];
+    const servs = [...(l.servicos || [])].sort((a, b) => ordemServico(a.nome) - ordemServico(b.nome));
     const total     = servs.length;
     const concluidos = servs.filter(s => s.status === "concluido").length;
     const progresso  = total > 0
