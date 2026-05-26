@@ -214,12 +214,29 @@ header {
   overflow-y: auto;
 }
 
+.form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
 .form-card h3 {
   font-size: 1rem;
   font-weight: 700;
   color: #1a3322;
-  margin-bottom: 14px;
 }
+
+.btn-fechar {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #aaa;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+}
+.btn-fechar:active { color: #f44336; }
 
 .form-grid {
   display: flex;

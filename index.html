@@ -9,7 +9,7 @@
   <title>Locais</title>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <link rel="manifest" href="./manifest.json" />
-  <link rel="stylesheet" href="./style.css?v=6" />
+  <link rel="stylesheet" href="./style.css?v=7" />
 </head>
 <body>
 
@@ -24,7 +24,10 @@
 <button class="fab" id="fab" onclick="toggleForm()">+</button>
 
 <form class="form-card" id="form" novalidate style="display:none">
-  <h3 id="form-titulo">Novo Local</h3>
+  <div class="form-header">
+    <h3 id="form-titulo">Novo Local</h3>
+    <button type="button" class="btn-fechar" onclick="toggleForm()">✕</button>
+  </div>
   <div class="form-grid">
 
     <div class="col2">
@@ -58,6 +61,6 @@
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="./app.js?v=6"></script>
+<script src="./app.js?v=7"></script>
 </body>
 </html>
