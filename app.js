@@ -7,7 +7,7 @@ const firebaseConfig = {
   appId: "1:472820177992:web:2e1b98c9f6ac3a823d0c7d"
 };
 
-const VERSAO = "1.3";
+const VERSAO = "1.4";
 document.getElementById("versao-app").textContent = "v" + VERSAO;
 
 firebase.initializeApp(firebaseConfig);
@@ -33,8 +33,20 @@ function parseDecimal(s) {
 // ─── Serviços disponíveis (carregados do Firestore) ───────────────────────────
 let servicosDisponiveis = [];
 
-colServ.orderBy("criadoEm", "asc").onSnapshot(snap => {
-  servicosDisponiveis = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+function sortServicos(docs) {
+  return [...docs].sort((a, b) => {
+    const aN = (a.nome || "").toLowerCase();
+    const bN = (b.nome || "").toLowerCase();
+    const aT = aN.startsWith("tratamento") ? 0 : 1;
+    const bT = bN.startsWith("tratamento") ? 0 : 1;
+    if (aT !== bT) return aT - bT;
+    return aN.localeCompare(bN, "pt-BR");
+  });
+}
+
+colServ.onSnapshot(snap => {
+  const raw = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  servicosDisponiveis = sortServicos(raw);
   renderCheckboxes(editandoServicos);
 });
 
