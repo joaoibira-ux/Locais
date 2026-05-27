@@ -7,7 +7,7 @@ const firebaseConfig = {
   appId: "1:472820177992:web:2e1b98c9f6ac3a823d0c7d"
 };
 
-const VERSAO = "2.0";
+const VERSAO = "2.1";
 document.getElementById("versao-app").textContent = "v" + VERSAO;
 
 firebase.initializeApp(firebaseConfig);
@@ -164,6 +164,17 @@ function render(docs) {
       ? `<div class="prog-bar"><div class="prog-fill" style="width:${Math.round(concluidos/total*100)}%"></div></div>`
       : "";
 
+    const labelStatus = s => {
+      if (s.status === "concluido")    return "concluído";
+      if (s.status === "em_pagamento") return "na folha";
+      return "pendente";
+    };
+    const iconeStatus = s => {
+      if (s.status === "concluido")    return "✓";
+      if (s.status === "em_pagamento") return "⏳";
+      return "○";
+    };
+
     const listaServs = servs.length === 0
       ? '<p class="check-vazio">Sem serviços atribuídos.</p>'
       : servs.map(s => {
@@ -172,12 +183,12 @@ function render(docs) {
             : "";
           return `
             <button class="serv-item ${s.status}" onclick="toggleServico('${doc.id}','${s.id}')">
-              <span class="serv-icone">${s.status === "concluido" ? "✓" : "○"}</span>
+              <span class="serv-icone">${iconeStatus(s)}</span>
               <div class="serv-info">
                 <span class="serv-nome">${escHtml(s.nome)}</span>
                 ${executor}
               </div>
-              <span class="serv-badge ${s.status}">${s.status === "concluido" ? "concluído" : "pendente"}</span>
+              <span class="serv-badge ${s.status}">${labelStatus(s)}</span>
             </button>`;
         }).join("");
 
@@ -222,6 +233,16 @@ function toggleServico(localId, servicoId) {
       s.id === servicoId ? { id: s.id, nome: s.nome, status: "pendente" } : s
     );
     colLocal.doc(localId).update({ servicos });
+
+  } else if (serv.status === "em_pagamento") {
+    const senha = prompt(`CANCELAR DA FOLHA?\n\n${serv.nome}\nEste item voltará para pendente no mapa.\n\nDigite a senha:`);
+    if (senha === null) return;
+    if (senha !== "4512") { alert("Senha incorreta."); return; }
+    const servicos = (l.servicos || []).map(s =>
+      s.id === servicoId ? { id: s.id, nome: s.nome, status: "pendente" } : s
+    );
+    colLocal.doc(localId).update({ servicos });
+
   } else {
     abrirModalFuncionarios(localId, servicoId);
   }

@@ -271,8 +271,13 @@ header {
   border-radius: 4px;
   flex-shrink: 0;
 }
-.serv-badge.pendente  { background: #fff3e0; color: #e65100; }
-.serv-badge.concluido { background: #e8f5e9; color: #2e7d32; }
+.serv-badge.pendente     { background: #fff3e0; color: #e65100; }
+.serv-badge.concluido    { background: #e8f5e9; color: #2e7d32; }
+.serv-badge.em_pagamento { background: #fff9c4; color: #f57f17; }
+
+.serv-item.em_pagamento { background: #fffde7; }
+.serv-item.em_pagamento .serv-icone { color: #f9a825; }
+.serv-item.em_pagamento .serv-nome  { color: #555; }
 
 /* ── FAB ── */
 .fab {
