@@ -7,7 +7,7 @@ const firebaseConfig = {
   appId: "1:472820177992:web:2e1b98c9f6ac3a823d0c7d"
 };
 
-const VERSAO = "2.1";
+const VERSAO = "2.2";
 document.getElementById("versao-app").textContent = "v" + VERSAO;
 
 firebase.initializeApp(firebaseConfig);
@@ -15,6 +15,7 @@ const db       = firebase.firestore();
 const colLocal = db.collection("locais");
 const colServ  = db.collection("servicos");
 const colFunc  = db.collection("funcionarios");
+const colConfig = db.collection("config");
 
 function escHtml(s) {
   return String(s || "")
@@ -337,6 +338,45 @@ function toggleForm() {
     document.getElementById("form").reset();
     renderCheckboxes([]);
   }
+}
+
+// ─── Configuração do local do ponto ────────────────────────────────────────────
+function abrirConfigPonto() {
+  const senha = prompt("Configurar local do ponto\n\nDigite a senha:");
+  if (senha === null) return;
+  if (senha !== "2248") { alert("Senha incorreta."); return; }
+
+  colConfig.doc("ponto").get().then(snap => {
+    const d = snap.exists ? snap.data() : {};
+    document.getElementById("cp-lat").value  = d.latitude  != null ? d.latitude  : "";
+    document.getElementById("cp-lng").value  = d.longitude != null ? d.longitude : "";
+    document.getElementById("cp-raio").value = d.raio      != null ? d.raio      : "200";
+    document.getElementById("modal-ponto").style.display = "flex";
+  });
+}
+
+function fecharConfigPonto() {
+  document.getElementById("modal-ponto").style.display = "none";
+}
+
+function usarLocalizacaoAtual() {
+  if (!navigator.geolocation) { alert("Geolocalização não disponível neste dispositivo."); return; }
+  navigator.geolocation.getCurrentPosition(pos => {
+    document.getElementById("cp-lat").value = pos.coords.latitude;
+    document.getElementById("cp-lng").value = pos.coords.longitude;
+  }, err => {
+    alert("Erro ao obter localização: " + err.message);
+  }, { timeout: 10000, maximumAge: 60000 });
+}
+
+function salvarConfigPonto() {
+  const lat  = parseFloat(String(document.getElementById("cp-lat").value).replace(",", "."));
+  const lng  = parseFloat(String(document.getElementById("cp-lng").value).replace(",", "."));
+  const raio = parseFloat(String(document.getElementById("cp-raio").value).replace(",", "."));
+  if (isNaN(lat) || isNaN(lng)) { alert("Latitude e longitude são obrigatórias."); return; }
+  colConfig.doc("ponto").set({ latitude: lat, longitude: lng, raio: isNaN(raio) ? 200 : raio });
+  fecharConfigPonto();
+  alert("Local do ponto salvo!");
 }
 
 if ("serviceWorker" in navigator) {

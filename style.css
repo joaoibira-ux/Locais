@@ -32,6 +32,17 @@ header {
   font-weight: 400;
 }
 
+.btn-config {
+  background: none;
+  border: none;
+  color: #a5d6a7;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+.btn-config:active { color: #fff; }
+
 .lista {
   flex: 1;
   overflow-y: auto;
