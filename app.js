@@ -7,7 +7,7 @@ const firebaseConfig = {
   appId: "1:472820177992:web:2e1b98c9f6ac3a823d0c7d"
 };
 
-const VERSAO = "2.4";
+const VERSAO = "2.5";
 document.getElementById("versao-app").textContent = "v" + VERSAO;
 
 firebase.initializeApp(firebaseConfig);
@@ -58,6 +58,23 @@ function servicoAtual(s) {
   return disp ? { ...s, nome: disp.nome, item: disp.item } : s;
 }
 
+// Adiciona automaticamente novos serviços (cadastrados no app Serviços) a todos
+// os apartamentos já existentes que ainda não os possuem, com status "pendente"
+function sincronizarNovosServicos() {
+  if (servicosDisponiveis.length === 0) return;
+  Object.entries(locaisCache).forEach(([id, l]) => {
+    const atuais = l.servicos || [];
+    const existentes = new Set(atuais.map(s => s.id));
+    const faltando = servicosDisponiveis.filter(s => !existentes.has(s.id));
+    if (faltando.length === 0) return;
+    const novos = faltando.map(s => ({
+      id: s.id, nome: s.nome, status: "pendente",
+      ...(s.item ? { item: s.item } : {})
+    }));
+    colLocal.doc(id).update({ servicos: [...atuais, ...novos] });
+  });
+}
+
 // ─── Serviços disponíveis ─────────────────────────────────────────────────────
 let servicosDisponiveis = [];
 
@@ -65,6 +82,7 @@ colServ.onSnapshot(snap => {
   const raw = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   servicosDisponiveis = sortServicos(raw);
   renderCheckboxes(editandoServicos);
+  sincronizarNovosServicos();
 });
 
 function renderCheckboxes(selecionados) {
@@ -224,6 +242,7 @@ function render(docs) {
 
 colLocal.orderBy("identificacao", "asc").onSnapshot(snap => {
   render(snap.docs);
+  sincronizarNovosServicos();
 }, err => {
   console.error(err);
   document.getElementById("lista").innerHTML =
