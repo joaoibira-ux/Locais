@@ -7,7 +7,7 @@ const firebaseConfig = {
   appId: "1:472820177992:web:2e1b98c9f6ac3a823d0c7d"
 };
 
-const VERSAO = "2.3";
+const VERSAO = "2.4";
 document.getElementById("versao-app").textContent = "v" + VERSAO;
 
 firebase.initializeApp(firebaseConfig);
@@ -42,8 +42,20 @@ function ordemServico(nome) {
   return 99;
 }
 
+function itemValue(s) {
+  const i = parseFloat(s.item);
+  return isNaN(i) ? 1000 + ordemServico(s.nome) : i;
+}
+
 function sortServicos(docs) {
-  return [...docs].sort((a, b) => ordemServico(a.nome) - ordemServico(b.nome));
+  return [...docs].sort((a, b) => itemValue(a) - itemValue(b));
+}
+
+// Mescla um item de serviço salvo no local com os dados atuais do app Serviços
+// (nome/item podem ter mudado desde que o serviço foi atribuído ao apartamento)
+function servicoAtual(s) {
+  const disp = servicosDisponiveis.find(d => d.id === s.id);
+  return disp ? { ...s, nome: disp.nome, item: disp.item } : s;
 }
 
 // ─── Serviços disponíveis ─────────────────────────────────────────────────────
@@ -66,7 +78,7 @@ function renderCheckboxes(selecionados) {
     return `
       <label class="check-item">
         <input type="checkbox" value="${s.id}" ${checked} />
-        <span>${escHtml(s.nome)}</span>
+        <span>${s.item ? `<span class="card-item-badge">${escHtml(s.item)}</span> ` : ""}${escHtml(s.nome)}</span>
       </label>`;
   }).join("");
 }
@@ -158,7 +170,7 @@ function render(docs) {
   lista.innerHTML = docs.map(doc => {
     const l = doc.data();
     locaisCache[doc.id] = l;
-    const servs      = [...(l.servicos || [])].sort((a, b) => ordemServico(a.nome) - ordemServico(b.nome));
+    const servs      = [...(l.servicos || [])].map(servicoAtual).sort((a, b) => itemValue(a) - itemValue(b));
     const total      = servs.length;
     const concluidos = servs.filter(s => s.status === "concluido").length;
     const progresso  = total > 0
@@ -186,7 +198,7 @@ function render(docs) {
             <button class="serv-item ${s.status}" onclick="toggleServico('${doc.id}','${s.id}')">
               <span class="serv-icone">${iconeStatus(s)}</span>
               <div class="serv-info">
-                <span class="serv-nome">${escHtml(s.nome)}</span>
+                <span class="serv-nome">${s.item ? `<span class="card-item-badge">${escHtml(s.item)}</span> ` : ""}${escHtml(s.nome)}</span>
                 ${executor}
               </div>
               <span class="serv-badge ${s.status}">${labelStatus(s)}</span>
