@@ -1,9 +1,10 @@
-const VERSION = "locais-v13";
+const VERSION = "locais-v14";
 const ASSETS = [
   "./index.html",
-  "./style.css?v=13",
-  "./app.js?v=13",
-  "./manifest.json"
+  "./style.css?v=14",
+  "./app.js?v=14",
+  "./manifest.json",
+  "./Logo-gw.png"
 ];
 
 self.addEventListener("install", e => {

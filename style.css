@@ -32,6 +32,12 @@ header {
   font-weight: 400;
 }
 
+.header-left, .header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .btn-config {
   background: none;
   border: none;
